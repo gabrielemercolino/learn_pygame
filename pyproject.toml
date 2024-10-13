@@ -1,0 +1,22 @@
+[project]
+name = "learn_pygame"
+version = "0.1.0"
+description = "Learning pygame"
+dependencies = ["pygame-ce",]
+authors = [ { name = "Gabriele", email = "gmercolino2003@gmail.com" } ]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.png", "*.wav", "*.json"]
+
+[tool.pyright]
+include = ["src"]
+
+[project.scripts]
+learn_pygame = "learn_pygame.main:main"
