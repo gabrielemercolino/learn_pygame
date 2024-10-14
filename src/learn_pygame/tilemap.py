@@ -30,13 +30,6 @@ class Tilemap:
         # other objects on the map with pixel position
         self.decorations: set[Tile] = set()
 
-        for i in range(10):
-            position = (3+i, 10)
-            self.tilemap[position] = Tile(kind="grass", variant=1, position=pygame.Vector2(*position))
-            
-            position = (10, i+5)
-            self.tilemap[position] = Tile(kind="stone", variant=1, position=pygame.Vector2(*position))
-
     def render(self, destination: pygame.Surface, offset: pygame.Vector2) -> None:
         # decorations behind actual grid
         for decoration in self.decorations:
