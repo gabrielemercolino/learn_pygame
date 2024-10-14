@@ -2,7 +2,7 @@
 name = "learn_pygame"
 version = "0.1.0"
 description = "Learning pygame"
-dependencies = ["pygame-ce",]
+dependencies = ["pygame-ce","attrs"]
 authors = [ { name = "Gabriele", email = "gmercolino2003@gmail.com" } ]
 
 [build-system]

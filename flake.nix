@@ -1,5 +1,5 @@
 {
-  description = "template dev flake";
+  description = "Example game made with pygame to learn the library";
   
   outputs = { self, nixpkgs, flake-utils, pyproject-nix, ... }:
     flake-utils.lib.eachDefaultSystem (system:
@@ -20,7 +20,7 @@
         };
 
         devShells.default = pkgs.mkShell {
-          buildInputs = [ python python.pkgs.pygame-ce ];  # Aggiungi Python e Pygame alla shell
+          buildInputs = [ python python.pkgs.pygame-ce python.pkgs.attrs];
         };
       }
     );
