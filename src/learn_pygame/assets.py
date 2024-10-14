@@ -6,7 +6,6 @@ BLACK = (0, 0, 0)
 
 class Assets:
     tiles: dict[str, list[pygame.Surface]]
-    player: pygame.Surface
     background: pygame.Surface
     clouds: list[pygame.Surface]
     animations: dict[str, dict[str, Animation]]
@@ -19,7 +18,6 @@ class Assets:
             decor       = load_images("tiles/decor", color_key=BLACK),
             large_decor = load_images("tiles/large_decor", color_key=BLACK)
         )
-        Assets.player = load_image("entities/player.png", color_key=BLACK)
         Assets.background = load_image("background.png")
         Assets.clouds = load_images("clouds", color_key=BLACK)
     
