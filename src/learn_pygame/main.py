@@ -2,7 +2,7 @@ import sys
 import pygame
 from learn_pygame.assets import Assets
 from learn_pygame.clouds import Clouds
-from learn_pygame.entities import PhysicsEntity
+from learn_pygame.entities import Player
 from learn_pygame.tilemap import Tilemap
 
 
@@ -21,7 +21,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.input = dict(left=0, right=0)
 
-        self.player = PhysicsEntity('player', (50, 50), (8, 15))
+        self.player = Player((50, 50), (8, 15))
         self.tilemap = Tilemap()
         self.clouds = Clouds(cloud_count=10)
 
@@ -67,11 +67,11 @@ class Game:
                 case pygame.QUIT:
                     self.running = False
                 case pygame.KEYUP:
-                    self.handle_input(event, False)
+                    self.handle_keyboard_input(event, False)
                 case pygame.KEYDOWN:
-                    self.handle_input(event, True)
+                    self.handle_keyboard_input(event, True)
 
-    def handle_input(self, event: pygame.Event, is_down: bool) -> None:
+    def handle_keyboard_input(self, event: pygame.Event, is_down: bool) -> None:
         match event.key:
             case pygame.K_a:   
                 self.input["left"] = is_down
