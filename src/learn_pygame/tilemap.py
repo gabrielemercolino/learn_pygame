@@ -28,11 +28,12 @@ class Tilemap:
         # the actual tile map with position relative to the tile size
         self.tilemap: dict[tuple[int, int], Tile] = dict()
         # other objects on the map with pixel position
-        self.decorations: set[Tile] = set()
+        self.decorations: dict[tuple[int, int], Tile] = dict()
 
     def render(self, destination: pygame.Surface, offset: pygame.Vector2) -> None:
         # decorations behind actual grid
-        for decoration in self.decorations:
+        for position in self.decorations:
+            decoration = self.decorations[position]
             decoration_sprite = Assets.tiles[decoration.kind][decoration.variant]
             final_position = pygame.Vector2(decoration.position.xy) - offset
             destination.blit(decoration_sprite, final_position)
