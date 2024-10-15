@@ -1,8 +1,8 @@
 import sys
-from attrs import define, field
+from attrs import define
 import pygame
 from learn_pygame.assets import Assets
-from learn_pygame.tilemap import Tilemap
+from learn_pygame.tilemap import Tile, Tilemap
 
 RENDER_SCALE = 2.0
 
@@ -11,7 +11,6 @@ class Menu:
     assets_list: list[list[pygame.Surface]]
     current_group: int = 0
     current_variant: int = 0
-    position: pygame.Vector2 = field(factory=pygame.Vector2)
 
 
 class Editor:
@@ -27,7 +26,7 @@ class Editor:
 
         Assets.load()
         self.clock = pygame.time.Clock()
-        self.input = dict(left=0, right=0, up=0, down=0)
+        self.input = dict(left=0, right=0, up=0, down=0, mouse_left_click=0, mouse_right_click=0, grid_mode=0)
 
         self.menu = Menu(assets_list=list(Assets.tiles.values())) 
 
@@ -48,11 +47,42 @@ class Editor:
             self.camera_offset.x += self.input["right"]-self.input["left"]
             self.camera_offset.y += self.input["down"]-self.input["up"]
 
-            # rendering
+            
             self.tilemap.render(destination=self.display, offset=self.camera_offset)
+            
+            # positioning logic
             selected_asset = self.menu.assets_list[self.menu.current_group][self.menu.current_variant].copy()
             selected_asset.set_alpha(100)
-            self.display.blit(selected_asset, self.menu.position)
+            mouse_position = pygame.mouse.get_pos()
+            mouse_position = (mouse_position[0] / RENDER_SCALE, mouse_position[1] / RENDER_SCALE)
+            tile_position = (int((mouse_position[0] + self.camera_offset.x) // self.tilemap.tile_size), int((mouse_position[1] + self.camera_offset.y) // self.tilemap.tile_size))
+
+            if self.input['grid_mode'] == 0:
+                self.display.blit(selected_asset, (tile_position[0] * self.tilemap.tile_size - int(self.camera_offset.x), tile_position[1] * self.tilemap.tile_size - int(self.camera_offset.y)))
+            else:
+                self.display.blit(selected_asset, mouse_position)
+
+            if self.input['mouse_left_click']:
+                if self.input['grid_mode'] == 0:
+                    self.tilemap.tilemap[tile_position] = Tile(kind=list(Assets.tiles.keys())[self.menu.current_group], variant=self.menu.current_variant,position=pygame.Vector2(tile_position))
+                else:
+                    position = (int(mouse_position[0] + self.camera_offset.x), int(mouse_position[1] + self.camera_offset.y))
+                    self.tilemap.decorations[position] = Tile(kind=list(Assets.tiles.keys())[self.menu.current_group], variant=self.menu.current_variant,position=pygame.Vector2(position))
+                    self.input['mouse_left_click'] = 0
+            if self.input['mouse_right_click']:
+                if self.input['grid_mode'] == 0:
+                    if tile_position in self.tilemap.tilemap:
+                        del self.tilemap.tilemap[tile_position]
+                else:
+                    position = (int(mouse_position[0] + self.camera_offset.x), int(mouse_position[1] + self.camera_offset.y))
+                    for pos in list(self.tilemap.decorations.keys()):
+                        tile = self.tilemap.decorations[pos]
+                        sprite = Assets.tiles[tile.kind][tile.variant]
+                        if position[0] - pos[0] > 0 and position[0] - pos[0] < sprite.width and position[1] - pos[1] > 0 and position[1] - pos[1] < sprite.height:
+                            del self.tilemap.decorations[pos]
+
+            self.display.blit(selected_asset, (5, 5))
+
 
             # now show the frame
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0,0))
@@ -72,10 +102,10 @@ class Editor:
                     self.handle_keyboard_input(event, False)
                 case pygame.KEYDOWN:
                     self.handle_keyboard_input(event, True)
-                case pygame.MOUSEMOTION:
-                    self.menu.position = pygame.Vector2(event.pos) // RENDER_SCALE
-                    self.menu.position.y -= self.menu.assets_list[self.menu.current_group][self.menu.current_variant].height
-                    self.menu.position.x -= self.menu.assets_list[self.menu.current_group][self.menu.current_variant].width // 2
+                case pygame.MOUSEBUTTONDOWN:
+                    self.handle_mouse_input(event, True)
+                case pygame.MOUSEBUTTONUP:
+                    self.handle_mouse_input(event, False)
 
     def handle_keyboard_input(self, event: pygame.Event, is_down: bool) -> None:
         match event.key:
@@ -87,6 +117,8 @@ class Editor:
                 self.input["up"] = is_down
             case pygame.K_s:
                 self.input["down"] = is_down
+            case pygame.K_g:
+                self.input["grid_mode"] = int(not bool(self.input["grid_mode"]))
             case pygame.K_UP:
                 if is_down: 
                     self.menu.current_group = (self.menu.current_group + 1) % len(self.menu.assets_list)
@@ -95,5 +127,11 @@ class Editor:
                 if is_down:
                     self.menu.current_variant = (self.menu.current_variant + 1) % len(self.menu.assets_list[self.menu.current_group])
 
+    def handle_mouse_input(self, event: pygame.Event, is_down: bool) -> None:
+        match event.button:
+            case 1:
+                self.input['mouse_left_click'] = is_down
+            case 3:
+                self.input['mouse_right_click'] = is_down
 
 Editor().run()
