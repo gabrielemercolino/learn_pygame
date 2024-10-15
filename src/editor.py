@@ -26,11 +26,15 @@ class Editor:
 
         Assets.load()
         self.clock = pygame.time.Clock()
-        self.input = dict(left=0, right=0, up=0, down=0, mouse_left_click=0, mouse_right_click=0, grid_mode=0)
+        self.input = dict(left=0, right=0, up=0, down=0, mouse_left_click=0, mouse_right_click=0, grid_mode=0, control=0)
 
         self.menu = Menu(assets_list=list(Assets.tiles.values())) 
 
         self.tilemap = Tilemap()
+        try:
+            self.tilemap.load('map.json')
+        except FileNotFoundError:
+            pass
 
         self.camera_offset = pygame.Vector2(0, 0)
 
@@ -64,10 +68,10 @@ class Editor:
 
             if self.input['mouse_left_click']:
                 if self.input['grid_mode'] == 0:
-                    self.tilemap.tilemap[tile_position] = Tile(kind=list(Assets.tiles.keys())[self.menu.current_group], variant=self.menu.current_variant,position=pygame.Vector2(tile_position))
+                    self.tilemap.tilemap[tile_position] = Tile(kind=list(Assets.tiles.keys())[self.menu.current_group], variant=self.menu.current_variant,position=tile_position)
                 else:
                     position = (int(mouse_position[0] + self.camera_offset.x), int(mouse_position[1] + self.camera_offset.y))
-                    self.tilemap.decorations[position] = Tile(kind=list(Assets.tiles.keys())[self.menu.current_group], variant=self.menu.current_variant,position=pygame.Vector2(position))
+                    self.tilemap.decorations[position] = Tile(kind=list(Assets.tiles.keys())[self.menu.current_group], variant=self.menu.current_variant,position=position)
                     self.input['mouse_left_click'] = 0
             if self.input['mouse_right_click']:
                 if self.input['grid_mode'] == 0:
@@ -78,7 +82,8 @@ class Editor:
                     for pos in list(self.tilemap.decorations.keys()):
                         tile = self.tilemap.decorations[pos]
                         sprite = Assets.tiles[tile.kind][tile.variant]
-                        if position[0] - pos[0] > 0 and position[0] - pos[0] < sprite.width and position[1] - pos[1] > 0 and position[1] - pos[1] < sprite.height:
+                        sprite_rect = pygame.Rect(pos[0] - self.camera_offset.x, pos[1] - self.camera_offset.y, sprite.width, sprite.height)
+                        if sprite_rect.collidepoint(mouse_position):
                             del self.tilemap.decorations[pos]
 
             self.display.blit(selected_asset, (5, 5))
@@ -117,8 +122,12 @@ class Editor:
                 self.input["up"] = is_down
             case pygame.K_s:
                 self.input["down"] = is_down
+                if self.input["control"] == 1:
+                    self.tilemap.save('map.json')
             case pygame.K_g:
                 self.input["grid_mode"] = int(not bool(self.input["grid_mode"]))
+            case pygame.K_LCTRL:
+                self.input["control"] = is_down
             case pygame.K_UP:
                 if is_down: 
                     self.menu.current_group = (self.menu.current_group + 1) % len(self.menu.assets_list)
