@@ -1,5 +1,5 @@
-from attrs import define 
-import pygame
+from attrs import asdict, define 
+import pygame, json, ast
 
 from learn_pygame.assets import Assets
 
@@ -16,10 +16,7 @@ PHYSICS_TILES_KINDS = {'grass', 'stone'}
 class Tile:
     kind: str
     variant: int
-    position: pygame.Vector2
-
-    def __hash__(self) -> int:
-        return hash((self.kind, self.variant, self.position.x, self.position.y))
+    position: tuple[int, int]
 
 
 class Tilemap:
@@ -35,7 +32,7 @@ class Tilemap:
         for position in self.decorations:
             decoration = self.decorations[position]
             decoration_sprite = Assets.tiles[decoration.kind][decoration.variant]
-            final_position = pygame.Vector2(decoration.position.xy) - offset
+            final_position = pygame.Vector2(*decoration.position) - offset
             destination.blit(decoration_sprite, final_position)
 
         # render tiles only actually in screen
@@ -45,7 +42,7 @@ class Tilemap:
                 if location in self.tilemap:
                     tile = self.tilemap[location]
                     tile_sprite = Assets.tiles[tile.kind][tile.variant]
-                    final_position = pygame.Vector2(tile.position.xy) * self.tile_size - offset
+                    final_position = pygame.Vector2(*tile.position) * self.tile_size - offset
                     destination.blit(tile_sprite, final_position)
 
 
@@ -66,3 +63,36 @@ class Tilemap:
                 tile_position = pygame.Vector2(tile.position[0], tile.position[1]) * self.tile_size
                 rects.append(pygame.Rect(tile_position.x, tile_position.y, self.tile_size, self.tile_size))
         return rects
+
+    def save(self, path: str) -> None:
+        with open(f"{path}", 'w') as f:
+            tiles = dict()
+            decorations = dict()
+
+            for key, value in self.tilemap.items():
+                tiles[str(key)] = asdict(value)
+
+            for key, value in self.decorations.items():
+                decorations[str(key)] = asdict(value)
+
+            contents = json.dumps(dict(tiles=tiles, decorations=decorations))
+            f.write(contents)
+
+    def load(self, path: str) -> None:
+        with open(f"{path}", 'r') as f:
+            tiles: dict[tuple[int, int], Tile] = dict()
+            decorations: dict[tuple[int, int], Tile] = dict()
+
+            data = json.load(f)
+            
+            _tiles: dict[str, dict] = data['tiles']
+            _decorations: dict[str, dict] = data['decorations']
+
+            for key, value in _tiles.copy().items():
+                tiles[ast.literal_eval(key)] = Tile(kind=value['kind'], variant=value['variant'], position=tuple(value['position']))
+            
+            for key, value in _decorations.copy().items():
+                decorations[ast.literal_eval(key)] = Tile(kind=value['kind'], variant=value['variant'], position=tuple(value['position']))
+
+            self.tilemap = tiles
+            self.decorations = decorations
