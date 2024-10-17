@@ -1,34 +1,37 @@
 {
   description = "Example game made with pygame to learn the library";
   
-  outputs = { self, nixpkgs, flake-utils, pyproject-nix, ... }:
+  outputs = { nixpkgs, flake-utils, pyproject-nix, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
         python = pkgs.python312;
         
-        game = pyproject-nix.lib.project.loadPyproject { projectRoot = ./game; };
-        game-attrs = game.renderers.buildPythonPackage { inherit python; };
-        
-        editor = pyproject-nix.lib.project.loadPyproject { projectRoot = ./editor; };
-        editor-attrs = editor.renderers.buildPythonPackage { inherit python; };
+        project = pyproject-nix.lib.project.loadPyprojectDynamic { projectRoot = ./.;};
+        attrs = project.renderers.buildPythonPackage { inherit python; };
+        learn_pygame = python.pkgs.buildPythonPackage attrs;
       in
       {
-        packages.learn_pygame_game = python.pkgs.buildPythonPackage game-attrs; 
-        packages.learn_pygame_editor = python.pkgs.buildPythonPackage editor-attrs;
+        packages.default = learn_pygame;
 
         apps.default = {
           type = "app";
-          program = "${self.packages.${system}.learn_pygame_game}/bin/game";
+          program = "${learn_pygame}/bin/game";
         };
 
         apps.editor = {
           type = "app";
-          program = "${self.packages.${system}.learn_pygame_editor}/bin/editor";
+          program = "${learn_pygame}/bin/editor";
         };
 
         devShells.default = pkgs.mkShell {
-          buildInputs = [ python python.pkgs.pygame-ce python.pkgs.attrs];
+          buildInputs = [ 
+            python 
+            (pkgs.poetry.override { python3 = python; })
+            python.pkgs.pygame
+            python.pkgs.attrs
+            python.pkgs.numpy
+          ];
         };
       }
     );
@@ -36,10 +39,9 @@
   inputs = {
     nixpkgs.url     = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    pyproject-nix = {
-      url = "github:nix-community/pyproject.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    poetry2nix.url  = "github:nix-community/poetry2nix";
+    pyproject-nix.url = "github:nix-community/pyproject.nix";
+    pyproject-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 }
 

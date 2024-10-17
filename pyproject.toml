@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "learn-pygame"
+version = "0.1.0"
+description = "A simple game made for learing pygame"
+authors = ["Gabriele <gmercolino2003@gmail.com>"]
+license = "MIT"
+packages = [
+  { include = "src" },
+]
+include = [
+  { path = "src/assets", format = ["sdist", "wheel"] }
+]
+
+
+[tool.poetry.dependencies]
+python = "^3.12"
+attrs = "^23.2.0"
+pygame-ce = "^2.5.1"
+
+
+[tool.poetry.scripts]
+game = "src.main:main"
+editor = "src.editor:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
