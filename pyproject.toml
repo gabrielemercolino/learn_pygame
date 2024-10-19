@@ -1,22 +1,27 @@
-[project]
-name = "learn_pygame"
+[tool.poetry]
+name = "learn-pygame"
 version = "0.1.0"
-description = "Learning pygame"
-dependencies = ["pygame-ce","attrs"]
-authors = [ { name = "Gabriele", email = "gmercolino2003@gmail.com" } ]
+description = "A simple game made for learing pygame"
+authors = ["Gabriele <gmercolino2003@gmail.com>"]
+license = "MIT"
+packages = [
+  { include = "src" },
+]
+include = [
+  { path = "src/assets", format = ["sdist", "wheel"] }
+]
+
+
+[tool.poetry.dependencies]
+python = "^3.12"
+attrs = "^23.2.0"
+pygame-ce = "^2.5.1"
+
+
+[tool.poetry.scripts]
+game = "src.main:main"
+editor = "src.editor:main"
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-"*" = ["*.png", "*.wav", "*.json"]
-
-[tool.pyright]
-include = ["src"]
-
-[project.scripts]
-learn_pygame = "learn_pygame.main:main"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
